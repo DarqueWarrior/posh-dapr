@@ -44,6 +44,11 @@ stages:
           # Load the psd1 file so you can read the required modules and import them
           $manifest = Import-PowerShellDataFile .\dist\*.psd1
 
+          # Install each module
+          if ($null -ne $manifest.RequiredModules) {
+            $manifest.RequiredModules | ForEach-Object { Install-Module -Name $_ -Repository PSGallery -Force -Scope CurrentUser -Verbose }
+          }
+
           $count = 0
           $r = Invoke-ScriptAnalyzer –Path ./dist –Recurse | Where-Object severity -ne "Information"
           $r | ForEach-Object {Write-Host "##vso[task.logissue type=error;sourcepath=$($_.ScriptPath);linenumber=$($_.Line);columnnumber=$($_.Column);]$($_.Message)"; $count++}
@@ -137,7 +142,9 @@ stages:
                 $manifest = Import-PowerShellDataFile .\$(Folder)\*.psd1
 
                 # Install each module
-                $manifest.RequiredModules | ForEach-Object { Install-Module -Name $_ -Repository PSGallery -Force -Scope CurrentUser -Verbose }
+                if ($null -ne $manifest.RequiredModules) {
+                  $manifest.RequiredModules | ForEach-Object { Install-Module -Name $_ -Repository PSGallery -Force -Scope CurrentUser -Verbose }
+                }
               workingDirectory: '$(Pipeline.Workspace)/module'
 
           - task: PowerShell@2
