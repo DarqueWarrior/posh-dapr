@@ -30,7 +30,7 @@
    Copyright            = '(c) 2020 Donovan Brown. All rights reserved.'
 
    # Description of the functionality provided by this module
-   Description          = 'Adds functionality for working with Azure DevOps and Team Foundation Server.'
+   Description          = 'Provides tab completion that goes beyond that supported by the `dapr completion` command that comes with Dapr.'
 
    # Minimum version of the Windows PowerShell engine required by this module
    PowerShellVersion = '5.1'
