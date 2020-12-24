@@ -7,40 +7,50 @@ function DaprTabExpansion {
 
    process {
       switch -regex ($lastBlock) {
-         # handles dapr <cmd> -<option>
-         # handles dapr <cmd> --<option>
-         'dapr(\.exe)* (\S+) (-{1,2})(\S*)$' {
-            daprOptions $matches[2] $matches[4];
-            return;
+
+         # handles dapr <cmd> -<option> value -<option> ...
+         'dapr(\.exe)* (?<cmd>\S+) ((-{1,2})(\S+) \S+ )*(-{1,2})(?<filter>\S*)$' {
+            findDaprFlags -currentLine $matches[0] -cmd $matches['cmd'] -filter $matches['filter']
+            break
+         }
+
+         # handles dapr stop <dapr instance>
+         # handles dapr stop -a <dapr instance>
+         # handles dapr stop -app-id <dapr instance>
+         'dapr(\.exe)* stop (-a |--app-id )*(?<filter>\S*)$' {
+            findDaprInstances -filter $matches['filter']
+            break
          }
 
          # handles dapr <cmd>
          # handles dapr help <cmd>
-         'dapr(\.exe)* (help )?(\S*)$' {
-            findDaprCommand($matches[3]);
-            return;
-         }
-
-         # handles dapr stop <dapr instance>
-         'dapr(\.exe)* (stop) (-a|--app-id| )*(\S*)$' {
-            daprInstances($matches[4])
-            return;
+         'dapr(\.exe)* (help )?(?<filter>\S*)$' {
+            findDaprCommands -filter $matches['filter']
+            break
          }
       }
    }
 }
 
-function daprInstances {
+function findDaprInstances {
    param(
       [string] $filter
    )
 
    process {
+      $filter = $filter.Trim()
       $output = _callDapr -cmd list
       $daprInstances = foreach ($i in $output) {
          # The id is followed by the http port
-         if ($i -match '([^ ]+) +[0-9]') {
-            $matches[1]
+         if ($i -match '(?<instance>[^ ]+) +[0-9]') {
+            $instance = $matches['instance']
+
+            if ($filter -and $instance.StartsWith($filter, 'CurrentCultureIgnoreCase')) {
+               $instance
+            }
+            elseif (-not $filter) {
+               $instance
+            }
          }
       }
 
@@ -50,7 +60,7 @@ function daprInstances {
 
 # By default the dapr command list is populated the first time daprCommands is invoked.
 # Invoke PopulateDaprCommands in your profile if you don't want the initial hit.
-function findDaprCommand {
+function findDaprCommands {
    param(
       [string] $filter
    )
@@ -77,8 +87,8 @@ function PopulateDaprCommands {
    process {
       $output = _callDapr -cmd help
       $cmds = foreach ($cmd in $output) {
-         if ($cmd -match '^  ([a-z]+) +[^[]') {
-            $matches[1]
+         if ($cmd -match '^  (?<cmd>[a-z]+) +[^[]') {
+            $matches['cmd']
          }
       }
 
@@ -104,8 +114,12 @@ function _callDapr {
    }
 }
 
-function daprOptions {
+function findDaprFlags {
    param(
+      # Contains all the text on the current line. This is used to remove
+      # and flags that have already been used in ths command
+      [string] $currentLine,
+
       [string] $cmd,
 
       [string] $filter
@@ -116,8 +130,14 @@ function daprOptions {
       $output = _callDapr -cmd $cmd -getHelp
 
       foreach ($line in $output) {
-         if ($line -match '^  .+--(\S+)') {
-            $opt = $matches[1]
+         if ($line -match '^ +(-[a-zA-Z], )*--(?<flag>\S+)') {
+            $opt = $matches['flag']
+
+            # Skip if it is already on the current line
+            if ($null -ne $(Select-String -InputObject $currentLine -Pattern $opt)) {
+               continue
+            }
+
             if ($filter -and $opt.StartsWith($filter)) {
                $optList += '--' + $opt.Trim()
             }
@@ -128,26 +148,6 @@ function daprOptions {
       }
 
       $optList | Sort-Object
-   }
-}
-
-# Set up tab expansion and include dapr expansion
-function TabExpansion {
-   param(
-      [string] $line,
-
-      [string] $lastWord
-   )
-
-   process {
-      $lastBlock = [regex]::Split($line, '[|;]')[-1]
-
-      switch -regex ($lastBlock) {
-         "^$(Get-AliasPattern dapr) (.*)" { DaprTabExpansion $lastBlock }
-
-         # Fall back on existing tab expansion
-         default { if (Test-Path Function:\TabExpansionBackup) { TabExpansionBackup $line $lastWord } }
-      }
    }
 }
 
@@ -169,4 +169,25 @@ if ($PowerTab_RegisterTabExpansion) {
 
 if (Test-Path Function:\TabExpansion) {
    Rename-Item Function:\TabExpansion TabExpansionBackup
+}
+
+# Set up tab expansion and include dapr expansion
+# This needs to be last in this file
+function TabExpansion {
+   param(
+      [string] $line,
+
+      [string] $lastWord
+   )
+
+   process {
+      $lastBlock = [regex]::Split($line, '[|;]')[-1]
+
+      switch -regex ($lastBlock) {
+         "^$(Get-AliasPattern dapr) (.*)" { DaprTabExpansion $lastBlock }
+
+         # Fall back on existing tab expansion
+         default { if (Test-Path Function:\TabExpansionBackup) { TabExpansionBackup $line $lastWord } }
+      }
+   }
 }
