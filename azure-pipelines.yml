@@ -1,19 +1,278 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+name: $(Build.BuildID)
 
 trigger:
-- main
+- trunk
 
-pool:
-  vmImage: 'ubuntu-latest'
+resources:
+- repo: self
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+variables:
+  Folder: 'dist'
+  TEAM_CIBUILD: 'true'
+  PESTER_VERSION: '5.0.2'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+stages:
+- stage: Build
+  displayName: Build Stage
+
+  jobs:
+  - job: Linux_Phase
+    displayName: Build Linux
+    pool:
+      vmImage: 'ubuntu-16.04'
+
+    steps:
+    - template: .build/unitTests.yml
+      parameters:
+        os: 'Linux'
+        buildHelp: 'false'
+
+    - task: PowerShell@2
+      displayName: 'Install PSScriptAnalyzer'
+      inputs:
+        pwsh: true
+        targetType: 'inline'
+        script: 'Install-Module -Name PSScriptAnalyzer -Repository PSGallery -Force -Scope CurrentUser -Verbose'
+
+    - task: PowerShell@2
+      displayName: 'Run Static Code Analysis'
+      inputs:
+        pwsh: true
+        targetType: 'inline'
+        script: |
+          # Has to happen in this task for it to take effect
+          # Load the psd1 file so you can read the required modules and import them
+          $manifest = Import-PowerShellDataFile .\dist\*.psd1
+
+          # Install each module
+          if ($null -ne $manifest.RequiredModules) {
+            $manifest.RequiredModules | ForEach-Object { Install-Module -Name $_ -Repository PSGallery -Force -Scope CurrentUser -Verbose }
+          }
+
+          $count = 0
+          $r = Invoke-ScriptAnalyzer –Path ./dist –Recurse | Where-Object severity -ne "Information"
+          $r | ForEach-Object {Write-Host "##vso[task.logissue type=error;sourcepath=$($_.ScriptPath);linenumber=$($_.Line);columnnumber=$($_.Column);]$($_.Message)"; $count++}
+
+          if($count -ne 0) {
+            Write-Host "##vso[task.complete result=Failed;]Static Code Analysis with error count = $count"
+          }
+
+  - job: macOS_Phase
+    displayName: Build macOS
+    pool:
+      vmImage: 'macOS-latest'
+
+    steps:
+    - template: .build/unitTests.yml
+      parameters:
+        os: 'macOS'
+        buildHelp: 'false'
+
+    - task: CopyFiles@2
+      displayName: 'Copy Module to Artifacts Folder'
+      inputs:
+        Contents: |
+          README.md
+          .gitignore
+          dist/**
+        TargetFolder: '$(build.artifactstagingdirectory)/posh-dapr'
+        flattenFolders: false
+      condition: and(succeeded(), eq(variables['System.PullRequest.IsFork'], false))
+
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Module'
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/posh-dapr'
+        artifact: 'module'
+      condition: and(succeeded(), eq(variables['System.PullRequest.IsFork'], false))
+
+  - job: Windows_Phase
+    displayName: Build Windows
+    pool:
+      vmImage: 'windows-latest'
+
+    steps:
+    - template: .build/unitTests.yml
+      parameters:
+        os: 'Windows'
+        buildHelp: 'false'
+
+    - task: CredScan@2
+      displayName: 'Run CredScan'
+      inputs:
+        toolMajorVersion: 'V2'
+        suppressionsFile: '$(Build.SourcesDirectory)/.build/credscan-supression.json'
+
+    - task: PostAnalysis@1
+      displayName: 'Post Analysis'
+      inputs:
+        AllTools: false
+        CredScan: true
+
+- stage: Package
+  displayName: Package Management
+  dependsOn: Build
+  condition: and(succeeded(), eq(variables['System.PullRequest.IsFork'], false))
+  jobs:
+  - deployment: Deploy
+    displayName: Package Management
+    pool:
+      vmImage: 'ubuntu-16.04'
+    environment: 'Default'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            displayName: 'Download module'
+            artifact: module
+
+          - task: NuGetToolInstaller@0
+            displayName: 'Install NuGet 5.2.0'
+            inputs:
+              versionSpec: 5.2.0
+
+          - task: PowerShell@2
+            displayName: 'Install Module Dependencies'
+            inputs:
+              pwsh: true
+              targetType: 'inline'
+              script: |
+                # Load the psd1 file so you can read the required modules and install them
+                $manifest = Import-PowerShellDataFile .\$(Folder)\*.psd1
+
+                # Install each module
+                if ($null -ne $manifest.RequiredModules) {
+                  $manifest.RequiredModules | ForEach-Object { Install-Module -Name $_ -Repository PSGallery -Force -Scope CurrentUser -Verbose }
+                }
+              workingDirectory: '$(Pipeline.Workspace)/module'
+
+          - task: PowerShell@2
+            displayName: 'Compute Version Number'
+            inputs:
+              pwsh: true
+              targetType: 'inline'
+              script: |
+                # Load the psd1 file so you can read the version
+                $manifest = Import-PowerShellDataFile .\$(Folder)\*.psd1
+
+                Write-Host "Package Version Number: $($manifest.ModuleVersion).$(Build.BuildId)"
+
+                Write-Host "##vso[task.setvariable variable=PACKAGE_VERSION;isOutput=false]$($manifest.ModuleVersion).$(Build.BuildId)"
+              workingDirectory: '$(Pipeline.Workspace)/module'
+
+          - task: PowerShell@2
+            displayName: 'Create NuSpec from PSD1'
+            inputs:
+              pwsh: true
+              targetType: 'inline'
+              script: |
+                Install-Module -Name Trackyon.Nuget -Scope CurrentUser -Force -Verbose
+
+                Write-Host "Convert psd1 into a NuSpec"
+
+                ConvertTo-NuSpec -Path ./$(Folder)/posh-dapr.psd1 -Verbose
+              workingDirectory: '$(Pipeline.Workspace)/module'
+
+          - task: NuGetCommand@2
+            displayName: 'Pack Module'
+            inputs:
+              command: pack
+              packagesToPack: '$(Pipeline.Workspace)/module/$(Folder)/posh-dapr.nuspec'
+              packDestination: '$(Pipeline.Workspace)/module/$(Folder)'
+              versioningScheme: byEnvVar
+              versionEnvVar: 'PACKAGE_VERSION'
+
+          - task: NuGetCommand@2
+            displayName: 'Push Module'
+            inputs:
+              command: 'push'
+              packagesToPush: '$(Pipeline.Workspace)/module/$(Folder)/*.nupkg'
+              nuGetFeedType: 'internal'
+              publishVstsFeed: '17020b01-6e51-4c14-a90f-258eee1970ed/70e84002-c5f7-4dd1-be48-1c6a7017d450'
+              allowPackageConflicts: true
+          
+
+- stage: Production
+  displayName: PowerShell Gallery / GitHub Release
+  dependsOn: Package
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/trunk'))
+  jobs:
+  - deployment: Deploy
+    displayName: PowerShell Gallery / GitHub Release
+    pool:
+      vmImage: 'windows-latest'
+    environment: 'PowerShell Gallery'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: module
+
+          - task: NuGetToolInstaller@0
+            displayName: 'Install NuGet 5.2.0'
+            inputs:
+              versionSpec: 5.2.0
+
+          - task: PowerShell@2
+            displayName: 'Install Module Dependencies'
+            inputs:
+              pwsh: true
+              targetType: 'inline'
+              script: |
+                # Load the psd1 file so you can read the required modules and install them
+                $manifest = Import-PowerShellDataFile .\$(Folder)\*.psd1
+
+                # Install each module
+                $manifest.RequiredModules | ForEach-Object { Install-Module -Name $_ -Repository PSGallery -F -Scope CurrentUser }
+              workingDirectory: '$(Pipeline.Workspace)/module'
+
+          - task: PowerShell@2
+            displayName: 'Create NuSpec from PSD1'
+            inputs:
+              pwsh: true
+              targetType: 'inline'
+              script: |
+                Install-Module -Name Trackyon.Nuget -Scope CurrentUser -Force -Verbose
+                ConvertTo-NuSpec -Path ./$(Folder)/posh-dapr.psd1
+
+                # Load the psd1 file so you can read the version
+                $manifest = Import-PowerShellDataFile ./$(Folder)/posh-dapr.psd1
+
+                Write-Host "##vso[task.setvariable variable=PACKAGE_VERSION;isOutput=false]$($manifest.ModuleVersion)"
+              workingDirectory: '$(Pipeline.Workspace)/module'
+
+          - task: NuGetCommand@2
+            displayName: 'Pack Module'
+            inputs:
+              command: pack
+              packagesToPack: '$(Pipeline.Workspace)/module/$(Folder)/posh-dapr.nuspec'
+              packDestination: '$(Pipeline.Workspace)/module/$(Folder)'
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish nupkg Artifact'
+            inputs:
+              targetPath: '$(Pipeline.Workspace)/module/$(Folder)'
+              artifact: 'Package'
+              publishLocation: 'pipeline'
+
+          - task: NuGetCommand@2
+            displayName: 'Push Module'
+            inputs:
+              command: push
+              packagesToPush: '$(Pipeline.Workspace)/module/$(Folder)/*.nupkg'
+              nuGetFeedType: external
+              publishFeedCredentials: 'PowerShell Gallery'
+
+          - task: GithubRelease@0
+            displayName: 'Create GitHub Release'
+            inputs:
+              gitHubConnection: Darquewarrior
+              repositoryName: DarqueWarrior/posh-dapr
+              tagSource: manual
+              tag: v$(PACKAGE_VERSION)
+              addChangeLog: true
+              compareWith: 'lastFullRelease'
+              assets: |
+                $(Pipeline.Workspace)/module/$(Folder)/*.nupkg

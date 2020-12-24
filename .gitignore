@@ -1,0 +1,9 @@
+**/docs
+en-US/posh-dapr-Help.xml
+/dist
+Tests/TestResults/test-results.xml
+
+#####
+# End of core ignore list, below put you custom 'per project' settings (patterns or path)
+#####
+Source/en-US/posh-dapr-Help.xml
