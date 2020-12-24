@@ -186,10 +186,12 @@ stages:
           - task: NuGetCommand@2
             displayName: 'Push Module'
             inputs:
-              command: push
+              command: 'push'
               packagesToPush: '$(Pipeline.Workspace)/module/$(Folder)/*.nupkg'
-              publishVstsFeed: 'posh-dapr'
+              nuGetFeedType: 'internal'
+              publishVstsFeed: '17020b01-6e51-4c14-a90f-258eee1970ed/70e84002-c5f7-4dd1-be48-1c6a7017d450'
               allowPackageConflicts: true
+          
 
 - stage: Production
   displayName: PowerShell Gallery / GitHub Release
