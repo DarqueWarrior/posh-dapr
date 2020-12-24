@@ -2,10 +2,11 @@ Set-StrictMode -Version Latest
 
 Describe "DaprTabExpansion" {
    BeforeAll {
-      $baseFolder = "$PSScriptRoot/.."
-      $sampleFiles = "$PSScriptRoot/SampleFiles"
+      $baseFolder = "$PSScriptRoot/../../.."
+$sampleFiles = "$PSScriptRoot/../../SampleFiles"
       $sut = (Split-Path -Leaf $PSCommandPath).Replace(".Tests.", ".")
-      . "$baseFolder/Src/$sut"
+      . "$baseFolder/Source/Private/commons.ps1"
+      . "$baseFolder/Source/Public/$sut"
 
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help.txt" } -ParameterFilter { $cmd -eq 'help' }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_list_two_instances.txt" -Raw } -ParameterFilter { $cmd -eq 'list' }

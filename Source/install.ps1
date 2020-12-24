@@ -12,7 +12,7 @@ if(!(Get-Command dapr -ErrorAction SilentlyContinue)) {
 
 $installDir = Split-Path $MyInvocation.MyCommand.Path -Parent
 if(!(Test-Path $PROFILE)) {
-    Write-Host "Creating PowerShell profile...`n$PROFILE"
+    Write-Information "Creating PowerShell profile...`n$PROFILE"
     New-Item $PROFILE -Force -Type File -ErrorAction Stop -WhatIf:$WhatIf > $null
 }
 
@@ -34,11 +34,11 @@ function Get-FileEncoding($Path) {
 
 $profileLine = ". '$installDir\profile.example.ps1'"
 if(Select-String -Path $PROFILE -Pattern $profileLine -Quiet -SimpleMatch) {
-    Write-Host "It seems posh-dapr is already installed..."
+    Write-Information "It seems posh-dapr is already installed..."
     return
 }
 
-Write-Host "Adding posh-dapr to profile..."
+Write-Information "Adding posh-dapr to profile..."
 @"
 
 # Load posh-dapr example profile
@@ -46,6 +46,6 @@ $profileLine
 
 "@ | Out-File $PROFILE -Append -WhatIf:$WhatIf -Encoding (Get-FileEncoding $PROFILE)
 
-Write-Host 'posh-dapr sucessfully installed!'
-Write-Host 'Please reload your profile for the changes to take effect:'
-Write-Host '    . $PROFILE'
+Write-Information 'posh-dapr sucessfully installed!'
+Write-Information 'Please reload your profile for the changes to take effect:'
+Write-Information '    . $PROFILE'
