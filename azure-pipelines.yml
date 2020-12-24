@@ -191,7 +191,7 @@ stages:
               nuGetFeedType: 'internal'
               publishVstsFeed: '17020b01-6e51-4c14-a90f-258eee1970ed/70e84002-c5f7-4dd1-be48-1c6a7017d450'
               allowPackageConflicts: true
-          
+
 
 - stage: Production
   displayName: PowerShell Gallery / GitHub Release
@@ -225,7 +225,9 @@ stages:
                 $manifest = Import-PowerShellDataFile .\$(Folder)\*.psd1
 
                 # Install each module
-                $manifest.RequiredModules | ForEach-Object { Install-Module -Name $_ -Repository PSGallery -F -Scope CurrentUser }
+                if ($null -ne $manifest.RequiredModules) {
+                  $manifest.RequiredModules | ForEach-Object { Install-Module -Name $_ -Repository PSGallery -Force -Scope CurrentUser -Verbose }
+                }
               workingDirectory: '$(Pipeline.Workspace)/module'
 
           - task: PowerShell@2
