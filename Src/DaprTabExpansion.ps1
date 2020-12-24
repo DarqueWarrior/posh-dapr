@@ -9,8 +9,8 @@ function DaprTabExpansion {
       switch -regex ($lastBlock) {
 
          # handles dapr <cmd> -<option> value -<option> ...
-         'dapr(\.exe)* (?<cmd>\S+) ((-{1,2})(\S+) \S+ )*(-{1,2})(?<filter>\S*)$' {
-            findDaprFlags -currentLine $matches[0] -cmd $matches['cmd'] -filter $matches['filter']
+         'dapr(\.exe)* (?<cmd>\S+) ((?<subCmd>\S+) |((-{1,2})(\S+) \S+ ))*(-{1,2})(?<filter>\S*)$' {
+            findDaprFlags -currentLine $matches[0] -cmd $matches['cmd'] -subCmd $matches['subCmd'] -filter $matches['filter']
             break
          }
 
@@ -23,9 +23,22 @@ function DaprTabExpansion {
          }
 
          # handles dapr <cmd>
+         # handles dapr cmd <subCommnad>
          # handles dapr help <cmd>
-         'dapr(\.exe)* (help )?(?<filter>\S*)$' {
-            findDaprCommands -filter $matches['filter']
+         # handles dapr help cmd <subCommnad>
+         'dapr(\.exe)* (help )?((?<cmd>\S+) )*(?<filter>\S*)$' {
+            if ($matches['cmd']) {
+               findDaprSubCommands -cmd $matches['cmd'] -filter $matches['filter']
+            }
+            else {
+               findDaprCommands -filter $matches['filter']
+            }
+            break
+         }
+
+         # handles dapr cmd <subCommnad>
+         'dapr(\.exe)* (?<cmd>\S+) (?<filter>\S*)$' {
+            findDaprSubCommands -cmd $matches['cmd'] -filter $matches['filter']
             break
          }
       }
@@ -56,6 +69,49 @@ function findDaprInstances {
 
       $daprInstances
    }
+}
+
+function findDaprSubCommands {
+   param(
+      [string] $cmd,
+
+      [string] $filter
+   )
+
+   $subCmds = @()
+   $startMatching = $false
+   $output = _callDapr -cmd $cmd -getHelp
+
+   foreach ($line in $output) {
+      if ($line -match 'Available Commands:') {
+         $startMatching = $true
+      }
+      elseif ($line -match 'Flags:') {
+         $startMatching = $false
+      }
+
+      if (-not $startMatching) {
+         continue
+      }
+
+      if ($line -match '^  (?<subCmd>\S+)') {
+         $subCmd = $matches['subCmd']
+
+         # Skip if it is already on the current line
+         if ($null -ne $(Select-String -InputObject $currentLine -Pattern $subCmd)) {
+            continue
+         }
+
+         if ($filter -and $subCmd.StartsWith($filter)) {
+            $subCmds += $subCmd.Trim()
+         }
+         elseif (-not $filter) {
+            $subCmds += $subCmd.Trim()
+         }
+      }
+   }
+
+   $subCmds | Sort-Object
 }
 
 # By default the dapr command list is populated the first time daprCommands is invoked.
@@ -101,12 +157,14 @@ function _callDapr {
    param(
       [string] $cmd,
 
+      [string] $subCmd,
+
       [switch] $getHelp
    )
 
    process {
       if ($getHelp.IsPresent) {
-         return dapr help $cmd
+         return dapr help $cmd $subCmd
       }
       else {
          return dapr $cmd
@@ -122,32 +180,35 @@ function findDaprFlags {
 
       [string] $cmd,
 
+      [string] $subCmd,
+
       [string] $filter
    )
 
    process {
-      $optList = @()
-      $output = _callDapr -cmd $cmd -getHelp
+      $flags = @()
+
+      $output = _callDapr -cmd $cmd -subCmd $subCmd -getHelp
 
       foreach ($line in $output) {
          if ($line -match '^ +(-[a-zA-Z], )*--(?<flag>\S+)') {
-            $opt = $matches['flag']
+            $flag = $matches['flag']
 
             # Skip if it is already on the current line
-            if ($null -ne $(Select-String -InputObject $currentLine -Pattern $opt)) {
+            if ($null -ne $(Select-String -InputObject $currentLine -Pattern $flag)) {
                continue
             }
 
-            if ($filter -and $opt.StartsWith($filter)) {
-               $optList += '--' + $opt.Trim()
+            if ($filter -and $flag.StartsWith($filter)) {
+               $flags += '--' + $flag.Trim()
             }
             elseif (-not $filter) {
-               $optList += '--' + $opt.Trim()
+               $flags += '--' + $flag.Trim()
             }
          }
       }
 
-      $optList | Sort-Object
+      $flags | Sort-Object
    }
 }
 

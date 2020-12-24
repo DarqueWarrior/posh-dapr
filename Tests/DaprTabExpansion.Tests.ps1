@@ -10,7 +10,12 @@ Describe "DaprTabExpansion" {
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help.txt" } -ParameterFilter { $cmd -eq 'help' }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_list_two_instances.txt" -Raw } -ParameterFilter { $cmd -eq 'list' }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_run.txt" } -ParameterFilter { $cmd -eq 'run' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_mtls.txt" } -ParameterFilter { $cmd -eq 'mtls' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_logs.txt" } -ParameterFilter { $cmd -eq 'logs' -and $getHelp -eq $true }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_stop.txt" } -ParameterFilter { $cmd -eq 'stop' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_help.txt" } -ParameterFilter { $cmd -eq 'help' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_completion.txt" } -ParameterFilter { $cmd -eq 'completion' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_mtls_export.txt" } -ParameterFilter { $cmd -eq 'mtls' -and $subCmd -eq 'export' -and $getHelp -eq $true }
 
       $expectedCmds = @('completion', 'components', 'configurations', 'dashboard', 'help', 'init', 'invoke', 'list', 'logs', 'mtls', 'publish', 'run', 'status', 'stop', 'uninstall')
    }
@@ -102,6 +107,45 @@ Describe "DaprTabExpansion" {
       It 'Should expand next flag' {
          $expected = $expected = @('--app-port', '--app-protocol', '--app-ssl', '--components-path', '--config', '--dapr-grpc-port', '--dapr-http-port', '--enable-profiling', '--help', '--log-level', '--placement-host-address', '--profile-port')
          $actual = DaprTabExpansion("dapr run --app-id test --app-max-concurrency 10 -")
+
+         $actual | Should -Be $expected
+      }
+   }
+
+   # Test for sub commands
+   Context "dapr completion " {
+      It 'Should expand sub commands' {
+         $expected = $expected = @('bash', 'powershell', 'zsh')
+         $actual = DaprTabExpansion("dapr completion ")
+
+         $actual | Should -Be $expected
+      }
+   }
+
+   # Test for help commands
+   Context "dapr help " {
+      It 'Should expand commands' {
+         $actual = DaprTabExpansion("dapr help ")
+
+         $actual | Should -Be $expectedCmds
+      }
+   }
+
+   # Test for help of sub commands
+   Context "dapr help mtls " {
+      It 'Should expand commands' {
+         $expected = $expected = @('expiry', 'export')
+         $actual = DaprTabExpansion("dapr help mtls ")
+
+         $actual | Should -Be $expected
+      }
+   }
+
+   # Test for flags of sub commands
+   Context "dapr mtls export -" {
+      It 'Should expand flags' {
+         $expected = ('--help', '--out')
+         $actual = DaprTabExpansion("dapr mtls export -")
 
          $actual | Should -Be $expected
       }
