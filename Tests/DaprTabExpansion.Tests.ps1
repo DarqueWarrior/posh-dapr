@@ -7,9 +7,9 @@ Describe "DaprTabExpansion" {
       $sut = (Split-Path -Leaf $PSCommandPath).Replace(".Tests.", ".")
       . "$baseFolder/Src/$sut"
 
-      Mock _getCmdHelp { Get-Content "$sampleFiles\dapr_help_stop.txt" }
-      Mock _callDapr { Get-Content -Path "$sampleFiles\dapr_help.txt" } -ParameterFilter { $cmd -eq 'help' }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help.txt" } -ParameterFilter { $cmd -eq 'help' }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_list_two_instances.txt" -Raw } -ParameterFilter { $cmd -eq 'list' }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_stop.txt" } -ParameterFilter { $cmd -eq 'stop' -and $getHelp -eq $true }
    }
 
    Context "dapr " {
