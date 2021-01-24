@@ -72,9 +72,16 @@ function findDaprInstances {
       $filter = $filter.Trim()
       $output = _callDapr -cmd list
       $daprInstances = foreach ($i in $output) {
-         # The id is followed by the http port
+         # The id is followed by the http, gRPC and App port
+         # with the latest version RC2 there are results that
+         # don't have a appid but 0 for all the ports. We don't
+         # want to return them. So check if the value is 0
          if ($i -match '(?<instance>[^ ]+) +[0-9]') {
             $instance = $matches['instance']
+
+            if($instance -eq "0"){
+               continue
+            }
 
             if ($filter -and $instance.StartsWith($filter, 'CurrentCultureIgnoreCase')) {
                $instance
