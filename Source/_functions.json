@@ -2,7 +2,6 @@
    "outputFile": "posh-dapr.functions.ps1",
    "fileType": "functions",
    "files": [
-      "./Private/*.ps1",
-      "./Public/*.ps1"
+      "./Private/*.ps1"
    ]
 }

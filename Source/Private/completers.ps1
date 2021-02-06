@@ -209,4 +209,3 @@ Register-Completer dapr_upgrade -Option @(
 	COMPGEN '--runtime-version' string 'The version of the Dapr runtime to upgrade to, for example: 1.0.0'
 	COMPGEN '--set' stringArray 'set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)'
 )
-

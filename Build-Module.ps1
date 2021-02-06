@@ -186,7 +186,7 @@ if ($runTests.IsPresent) {
    Import-Pester
 
    $pesterArgs = [PesterConfiguration]::Default
-   $pesterArgs.Run.Path = './Tests/function'
+   $pesterArgs.Run.Path = './Tests'
    $pesterArgs.TestResult.Enabled = $true
    $pesterArgs.TestResult.OutputPath = './Tests/TestResults/test-results.xml'
 

@@ -42,7 +42,15 @@ function Invoke-CompletionCustomScript {
    }
 }
 
-Invoke-CompletionCustomScript $PSScriptRoot/posh-dapr.functions.ps1
+# The way you load files during development is different than in prod.
+if (Test-Path $PSScriptRoot/posh-dapr.functions.ps1) {
+   # Prod
+   Invoke-CompletionCustomScript $PSScriptRoot/posh-dapr.functions.ps1
+}
+else {
+   # Dev
+   Invoke-CompletionCustomScript $PSScriptRoot/Private/completers.ps1, $PSScriptRoot/Private/completers4arguments.ps1
+}
 
 if ($CustomScriptPath) {
    Invoke-CompletionCustomScript $CustomScriptPath
@@ -57,6 +65,7 @@ $argumentCompleter = {
    $indexOfFirstArg = -1
    $optionWithArg = $null
    $completerName = 'dapr'
+   $startsWithHyphen = $false
    $managementCommand = $null
 
    for (; $counter -lt $commandAst.CommandElements.Count; $counter++) {
@@ -132,6 +141,7 @@ $argumentCompleter = {
    }
 
    if ($wordToComplete.StartsWith('-')) {
+      $startsWithHyphen = $true
       $completionResult = Invoke-Completer $completerName -Option -ArgumentList $wordToComplete, $commandAst, $cursorPosition
 
       if ($completedFlags) {
@@ -141,10 +151,24 @@ $argumentCompleter = {
       }
    }
    else {
+      $startsWithHyphen = $false
       $completionResult = Invoke-Completer $completerName -ArgumentList $wordToComplete, $commandAst, $cursorPosition, $indexOfFirstArg
    }
 
-   $completionResult | Where-Object CompletionText -Like "$wordToCompleteSubstring*"
+   if ($startsWithHyphen) {
+      # This will find double hyphen flags even when the user only uses 1 in
+      # the search. For example on dapr init the user can type -r and get
+      # --runtime-version returned.
+      $completionResult | Where-Object CompletionText -Like "*$wordToCompleteSubstring*"
+   }
+   else {
+      # This makes sure the command starts with the word to search instead of
+      # having that portion of the word anywhere in the commands. For example
+      # if the user types in dapr i we don't want to return completion and
+      # other commands that have an i anywhere in them. We only want to return
+      # init and invoke.
+      $completionResult | Where-Object CompletionText -Like "$wordToCompleteSubstring*"
+   }
 }
 
 Register-NativeCommandArgumentCompleter dapr $argumentCompleter
