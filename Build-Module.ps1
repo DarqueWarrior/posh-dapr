@@ -132,6 +132,10 @@ if (Test-Path ./Source/_functions.json) {
    Merge-File -inputFile ./Source/_functions.json -outputDir $output
 }
 
+# Copy nested modules
+Copy-Item -Path .\Source\DaprCompletionUtility -Destination $outputDir -Recurse -Force
+Copy-Item -Path .\Source\NativeCommandCompletion -Destination $outputDir -Recurse -Force
+
 # Build the help
 if ($buildHelp.IsPresent) {
    Write-Output 'Processing: External help file'
