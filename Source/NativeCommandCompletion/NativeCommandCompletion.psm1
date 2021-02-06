@@ -16,6 +16,7 @@ class NativeCommandCompletionResult : System.Management.Automation.CompletionRes
 $nativeCommandCompleters = @{}
 
 function New-CompletionResult {
+   [CmdletBinding(SupportsShouldProcess = $true)]
    param (
       [Parameter(Mandatory)]
       [string]$CompletionText,
@@ -37,7 +38,9 @@ function New-CompletionResult {
       }
    }
 
-   New-Object NativeCommandCompletionResult $CompletionText, $ListItemText, $ResultType, $ToolTip, $TextType
+   if ($Force -or $pscmdlet.ShouldProcess($CompletionText, "Add new completion result")) {
+      New-Object NativeCommandCompletionResult $CompletionText, $ListItemText, $ResultType, $ToolTip, $TextType
+   }
 }
 
 Set-Alias -Name COMPGEN -Value New-CompletionResult
@@ -107,7 +110,7 @@ function Invoke-Completer {
          $c
       }
       else {
-         New-CompletionResult -CompletionText $c -TextType Text -ResultType ([System.Management.Automation.CompletionResultType]::Text)
+         New-CompletionResult -CompletionText $c -TextType Text -ResultType ([System.Management.Automation.CompletionResultType]::Text) -Force
       }
    }
 }
@@ -115,14 +118,16 @@ function Invoke-Completer {
 function Register-NativeCommandArgumentCompleter {
    param (
       [Parameter(Mandatory)]
-      [string]$CommandName,
+      [string] $CommandName,
+
       [Parameter(Mandatory)]
-      [scriptblock]$ScriptBlock
+      [scriptblock] $ScriptBlock
    )
 
+   $script = $ScriptBlock
    $CommandName, (Get-Alias -Definition $CommandName -ErrorAction Ignore).Name | ForEach-Object {
       if ($_) {
-         Register-ArgumentCompleter -CommandName $_ -ScriptBlock $ScriptBlock -Native
+         Register-ArgumentCompleter -CommandName $_ -ScriptBlock $script -Native
       }
    }
 }
