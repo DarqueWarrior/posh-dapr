@@ -159,9 +159,11 @@ Write-Output 'Publishing: Additional files'
 Copy-Item -Path ./Source/install.ps1 -Destination "$output/install.ps1" -Force
 Copy-Item -Path ./Source/profile.example.ps1 -Destination "$output/profile.example.ps1" -Force
 
-Write-Output '  Updating: Functions To Export'
-$newValue = ((Get-ChildItem -Path "./Source/Public" -Filter '*.ps1').BaseName |
-   ForEach-Object -Process { Write-Output "'$_'" }) -join ','
+if (Test-Path -Path "./Source/Public") {
+   Write-Output '  Updating: Functions To Export'
+   $newValue = ((Get-ChildItem -Path "./Source/Public" -Filter '*.ps1').BaseName |
+      ForEach-Object -Process { Write-Output "'$_'" }) -join ','
+}
 
 (Get-Content "./Source/posh-dapr.psd1") -Replace ("FunctionsToExport.+", "FunctionsToExport = ($newValue)") | Set-Content "$output/posh-dapr.psd1"
 
