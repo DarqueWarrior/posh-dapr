@@ -165,7 +165,11 @@ if (Test-Path -Path "./Source/Public") {
       ForEach-Object -Process { Write-Output "'$_'" }) -join ','
 }
 
-(Get-Content "./Source/posh-dapr.psd1") -Replace ("FunctionsToExport.+", "FunctionsToExport = ($newValue)") | Set-Content "$output/posh-dapr.psd1"
+if ($newValue) {
+   (Get-Content "./Source/posh-dapr.psd1") -Replace ("FunctionsToExport.+", "FunctionsToExport = ($newValue)") | Set-Content "$output/posh-dapr.psd1"
+} else {
+   Copy-Item -Path "./Source/posh-dapr.psd1" -Destination "$output/posh-dapr.psd1"
+}
 
 Write-Output "Publishing: Complete to $output"
 # run the unit tests with Pester
