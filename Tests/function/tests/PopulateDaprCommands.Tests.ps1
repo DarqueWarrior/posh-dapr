@@ -9,22 +9,35 @@ Describe "DaprTabExpansion" {
       . "$baseFolder/Source/Public/$sut"
 
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help.txt" } -ParameterFilter { $cmd -eq 'help' }
-      Mock _callDapr { Get-Content "$sampleFiles\dapr_list_two_instances.txt" -Raw } -ParameterFilter { $cmd -eq 'list' }
-      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_run.txt" } -ParameterFilter { $cmd -eq 'run' -and $getHelp -eq $true }
-      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_mtls.txt" } -ParameterFilter { $cmd -eq 'mtls' -and $getHelp -eq $true }
-      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_logs.txt" } -ParameterFilter { $cmd -eq 'logs' -and $getHelp -eq $true }
-      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_stop.txt" } -ParameterFilter { $cmd -eq 'stop' -and $getHelp -eq $true }
-      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_help.txt" } -ParameterFilter { $cmd -eq 'help' -and $getHelp -eq $true }
-      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_upgrade.txt" } -ParameterFilter { $cmd -eq 'upgrade' -and $getHelp -eq $true }
-      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_uninstall.txt" } -ParameterFilter { $cmd -eq 'uninstall' -and $getHelp -eq $true }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_completion.txt" } -ParameterFilter { $cmd -eq 'completion' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_completion_bash.txt" } -ParameterFilter { $cmd -eq 'completion' -and $subCmd -eq 'bash' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_completion_powershell.txt" } -ParameterFilter { $cmd -eq 'completion' -and $subCmd -eq 'powershell' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_completion_zsh.txt" } -ParameterFilter { $cmd -eq 'completion' -and $subCmd -eq 'zsh' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_components.txt" } -ParameterFilter { $cmd -eq 'components' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_configurations.txt" } -ParameterFilter { $cmd -eq 'configurations' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_dashboard.txt" } -ParameterFilter { $cmd -eq 'dashboard' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_help.txt" } -ParameterFilter { $cmd -eq 'help' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_init.txt" } -ParameterFilter { $cmd -eq 'init' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_invoke.txt" } -ParameterFilter { $cmd -eq 'invoke' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_list.txt" } -ParameterFilter { $cmd -eq 'list' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_logs.txt" } -ParameterFilter { $cmd -eq 'logs' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_mtls.txt" } -ParameterFilter { $cmd -eq 'mtls' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_mtls_expiry.txt" } -ParameterFilter { $cmd -eq 'mtls' -and $subCmd -eq 'expiry' -and $getHelp -eq $true }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_mtls_export.txt" } -ParameterFilter { $cmd -eq 'mtls' -and $subCmd -eq 'export' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_publish.txt" } -ParameterFilter { $cmd -eq 'publish' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_run.txt" } -ParameterFilter { $cmd -eq 'run' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_status.txt" } -ParameterFilter { $cmd -eq 'status' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_stop.txt" } -ParameterFilter { $cmd -eq 'stop' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_uninstall.txt" } -ParameterFilter { $cmd -eq 'uninstall' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_upgrade.txt" } -ParameterFilter { $cmd -eq 'upgrade' -and $getHelp -eq $true }
+
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_list_two_instances.txt" -Raw } -ParameterFilter { $cmd -eq 'list' }
 
       Mock Invoke-RestMethod {
          $(Get-Content "$sampleFiles\dapr_init__runtime_version.json" -Raw | ConvertFrom-Json).value
       } -ParameterFilter { $Uri -eq 'https://api.github.com/repos/dapr/dapr/releases' }
 
-      $expectedCmds = @('completion', 'components', 'configurations', 'dashboard', 'help', 'init', 'invoke', 'list', 'logs', 'mtls', 'publish', 'run', 'status', 'stop', 'uninstall')
+      $expectedCmds = @('completion', 'components', 'configurations', 'dashboard', 'help', 'init', 'invoke', 'list', 'logs', 'mtls', 'publish', 'run', 'status', 'stop', 'uninstall', 'upgrade')
    }
 
    # Test that when dapr without the exe is used all the commands come back

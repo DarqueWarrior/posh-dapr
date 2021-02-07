@@ -13,7 +13,36 @@ process {
       }
    }
 
+   $output > "dapr_help.txt"
+   Write-Host "Mock _callDapr { Get-Content ""`$sampleFiles\dapr_help.txt"" } -ParameterFilter { `$cmd -eq 'help' }"
+
    foreach ($cmd in $cmds) {
       dapr $cmd --help > "dapr_help_$cmd.txt"
+      Write-Host "Mock _callDapr { Get-Content ""`$sampleFiles\dapr_help_$cmd.txt"" } -ParameterFilter { `$cmd -eq '$cmd' -and `$getHelp -eq `$true }"
+
+      # Process sub commands
+      $startMatching = $false
+      $output = dapr $cmd --help
+
+      foreach ($line in $output) {
+         if ($line -match 'Available Commands:') {
+            $startMatching = $true
+         }
+         elseif ($line -match 'Flags:') {
+            $startMatching = $false
+         }
+
+         if (-not $startMatching) {
+            continue
+         }
+
+         if ($line -match '^  (?<subCmd>\S+)') {
+            $subCmd = $matches['subCmd']
+            $sc = $subCmd.Trim()
+
+            dapr $cmd $sc --help > "dapr_help_$($cmd)_$sc.txt"
+            Write-Host "Mock _callDapr { Get-Content ""`$sampleFiles\dapr_help_$($cmd)_$sc.txt"" } -ParameterFilter { `$cmd -eq '$cmd' -and `$subCmd -eq '$sc' -and `$getHelp -eq `$true }"
+         }
+      }
    }
 }
