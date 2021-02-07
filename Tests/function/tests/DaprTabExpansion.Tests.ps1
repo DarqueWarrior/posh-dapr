@@ -12,11 +12,19 @@ Describe "PopulateDaprCommands" {
       mock DaprTabExpansion
    }
 
-   Context "TabExpansion" {
+   Context "TabExpansion dapr command" {
       It 'Should pass to DaprTabExpansion' {
          TabExpansion -Line "dapr -" -lastWord "-"
 
          Should -Invoke DaprTabExpansion -Exactly -Times 1 -Scope It
+      }
+   }
+
+   Context "TabExpansion non dapr command" {
+      It 'Should pass to DaprTabExpansion' {
+         TabExpansion -Line "cd d" -lastWord "d"
+
+         Should -Invoke DaprTabExpansion -Exactly -Times 0 -Scope It
       }
    }
 }
