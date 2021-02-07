@@ -8,21 +8,38 @@ Describe "DaprTabExpansion" {
       . "$baseFolder/Source/Private/commons.ps1"
       . "$baseFolder/Source/Public/$sut"
 
+      # Mock all calls to help because your CI system may not have dapr installed or the correct version.
+      # CLI version: 1.0.0-rc.4
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help.txt" } -ParameterFilter { $cmd -eq 'help' }
-      Mock _callDapr { Get-Content "$sampleFiles\dapr_list_two_instances.txt" -Raw } -ParameterFilter { $cmd -eq 'list' }
-      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_run.txt" } -ParameterFilter { $cmd -eq 'run' -and $getHelp -eq $true }
-      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_mtls.txt" } -ParameterFilter { $cmd -eq 'mtls' -and $getHelp -eq $true }
-      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_logs.txt" } -ParameterFilter { $cmd -eq 'logs' -and $getHelp -eq $true }
-      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_stop.txt" } -ParameterFilter { $cmd -eq 'stop' -and $getHelp -eq $true }
-      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_help.txt" } -ParameterFilter { $cmd -eq 'help' -and $getHelp -eq $true }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_completion.txt" } -ParameterFilter { $cmd -eq 'completion' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_completion_bash.txt" } -ParameterFilter { $cmd -eq 'completion' -and $subCmd -eq 'bash' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_completion_powershell.txt" } -ParameterFilter { $cmd -eq 'completion' -and $subCmd -eq 'powershell' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_completion_zsh.txt" } -ParameterFilter { $cmd -eq 'completion' -and $subCmd -eq 'zsh' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_components.txt" } -ParameterFilter { $cmd -eq 'components' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_configurations.txt" } -ParameterFilter { $cmd -eq 'configurations' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_dashboard.txt" } -ParameterFilter { $cmd -eq 'dashboard' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_help.txt" } -ParameterFilter { $cmd -eq 'help' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_init.txt" } -ParameterFilter { $cmd -eq 'init' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_invoke.txt" } -ParameterFilter { $cmd -eq 'invoke' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_list.txt" } -ParameterFilter { $cmd -eq 'list' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_logs.txt" } -ParameterFilter { $cmd -eq 'logs' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_mtls.txt" } -ParameterFilter { $cmd -eq 'mtls' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_mtls_expiry.txt" } -ParameterFilter { $cmd -eq 'mtls' -and $subCmd -eq 'expiry' -and $getHelp -eq $true }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_mtls_export.txt" } -ParameterFilter { $cmd -eq 'mtls' -and $subCmd -eq 'export' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_publish.txt" } -ParameterFilter { $cmd -eq 'publish' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_run.txt" } -ParameterFilter { $cmd -eq 'run' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_status.txt" } -ParameterFilter { $cmd -eq 'status' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_stop.txt" } -ParameterFilter { $cmd -eq 'stop' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_uninstall.txt" } -ParameterFilter { $cmd -eq 'uninstall' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_upgrade.txt" } -ParameterFilter { $cmd -eq 'upgrade' -and $getHelp -eq $true }
+
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_list_two_instances.txt" -Raw } -ParameterFilter { $cmd -eq 'list' }
 
       Mock Invoke-RestMethod {
          $(Get-Content "$sampleFiles\dapr_init__runtime_version.json" -Raw | ConvertFrom-Json).value
       } -ParameterFilter { $Uri -eq 'https://api.github.com/repos/dapr/dapr/releases' }
 
-      $expectedCmds = @('completion', 'components', 'configurations', 'dashboard', 'help', 'init', 'invoke', 'list', 'logs', 'mtls', 'publish', 'run', 'status', 'stop', 'uninstall')
+      $expectedCmds = @('completion', 'components', 'configurations', 'dashboard', 'help', 'init', 'invoke', 'list', 'logs', 'mtls', 'publish', 'run', 'status', 'stop', 'uninstall', 'upgrade')
    }
 
    # Test that when dapr without the exe is used all the commands come back
@@ -45,7 +62,7 @@ Describe "DaprTabExpansion" {
 
    Context "dapr run -" {
       It 'Should expand options' {
-         $expected = @('--app-id', '--app-max-concurrency', '--app-port', '--app-protocol', '--app-ssl', '--components-path', '--config', '--dapr-grpc-port', '--dapr-http-port', '--enable-profiling', '--help', '--log-level', '--placement-host-address', '--profile-port')
+         $expected = @('--app-id', '--app-max-concurrency', '--app-port', '--app-protocol', '--app-ssl', '--components-path', '--config', '--dapr-grpc-port', '--dapr-http-port', '--enable-profiling', '--help', '--log-level', '--metrics-port', '--placement-host-address', '--profile-port')
          $actual = DaprTabExpansion("dapr run -")
 
          $actual | Should -Be $expected
@@ -98,17 +115,60 @@ Describe "DaprTabExpansion" {
    }
 
    Context "dapr init --runtime-version <release>" {
-      It 'Should expand releases' {
+      It 'Should expand runtime versions' {
          $actual = DaprTabExpansion("dapr init --runtime-version ")
 
          $actual.count | Should -Be 4
       }
    }
 
+   Context "dapr init --kubernetes -r" {
+      It 'Should expand runtime versions' {
+         $expected = @('--runtime-version')
+         $actual = DaprTabExpansion("dapr init --kubernetes -r")
+
+         $actual | Should -Be $expected
+      }
+   }
+
+   Context "dapr init -k --runtime-version <release>" {
+      It 'Should expand runtime versions' {
+         $actual = DaprTabExpansion("dapr init -k --runtime-version ")
+
+         $actual.count | Should -Be 4
+      }
+   }
+
+   Context "dapr upgrade --runtime-version <release>" {
+      It 'Should expand runtime versions' {
+         $actual = DaprTabExpansion("dapr upgrade --runtime-version ")
+
+         $actual.count | Should -Be 4
+      }
+   }
+
+   Context "dapr upgrade --set key=value --s" {
+      It 'Should allow mupliple sets' {
+         $expected = @('--set')
+         $actual = DaprTabExpansion("dapr upgrade --set key=value --s")
+
+         $actual | Should -Be $expected
+      }
+   }
+
+   Context "dapr uninstall -" {
+      It 'Should expand next flag' {
+         $expected = @('--all', '--help', '--kubernetes', '--namespace', '--network')
+         $actual = DaprTabExpansion("dapr uninstall -")
+
+         $actual | Should -Be $expected
+      }
+   }
+
    # Test for run multiple flags can be expanded
    Context "dapr run --app-id test -" {
       It 'Should expand next flag' {
-         $expected = $expected = @('--app-max-concurrency', '--app-port', '--app-protocol', '--app-ssl', '--components-path', '--config', '--dapr-grpc-port', '--dapr-http-port', '--enable-profiling', '--help', '--log-level', '--placement-host-address', '--profile-port')
+         $expected = @('--app-max-concurrency', '--app-port', '--app-protocol', '--app-ssl', '--components-path', '--config', '--dapr-grpc-port', '--dapr-http-port', '--enable-profiling', '--help', '--log-level', '--metrics-port', '--placement-host-address', '--profile-port')
          $actual = DaprTabExpansion("dapr run --app-id test -")
 
          $actual | Should -Be $expected
@@ -118,7 +178,7 @@ Describe "DaprTabExpansion" {
    # Test for run multiple flags can be expanded
    Context "dapr run --app-id test --app-max-concurrency 10 -" {
       It 'Should expand next flag' {
-         $expected = $expected = @('--app-port', '--app-protocol', '--app-ssl', '--components-path', '--config', '--dapr-grpc-port', '--dapr-http-port', '--enable-profiling', '--help', '--log-level', '--placement-host-address', '--profile-port')
+         $expected = @('--app-port', '--app-protocol', '--app-ssl', '--components-path', '--config', '--dapr-grpc-port', '--dapr-http-port', '--enable-profiling', '--help', '--log-level', '--metrics-port', '--placement-host-address', '--profile-port')
          $actual = DaprTabExpansion("dapr run --app-id test --app-max-concurrency 10 -")
 
          $actual | Should -Be $expected
@@ -128,7 +188,7 @@ Describe "DaprTabExpansion" {
    # Test for sub commands
    Context "dapr completion " {
       It 'Should expand sub commands' {
-         $expected = $expected = @('bash', 'powershell', 'zsh')
+         $expected = @('bash', 'powershell', 'zsh')
          $actual = DaprTabExpansion("dapr completion ")
 
          $actual | Should -Be $expected
@@ -147,7 +207,7 @@ Describe "DaprTabExpansion" {
    # Test for help of sub commands
    Context "dapr help mtls " {
       It 'Should expand commands' {
-         $expected = $expected = @('expiry', 'export')
+         $expected = @('expiry', 'export')
          $actual = DaprTabExpansion("dapr help mtls ")
 
          $actual | Should -Be $expected
