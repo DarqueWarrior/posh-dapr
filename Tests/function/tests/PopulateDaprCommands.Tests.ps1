@@ -107,6 +107,15 @@ Describe "DaprTabExpansion" {
       }
    }
 
+   Context "dapr init --kubernetes -r" {
+      It 'Should expand runtime versions' {
+         $expected = @('--runtime-version')
+         $actual = DaprTabExpansion("dapr init --kubernetes -r")
+
+         $actual | Should -Be $expected
+      }
+   }
+
    Context "dapr init -k --runtime-version <release>" {
       It 'Should expand runtime versions' {
          $actual = DaprTabExpansion("dapr init -k --runtime-version ")

@@ -27,6 +27,14 @@ function _callDapr {
    )
 
    process {
+
+      # Sometimes flags are passed in as sub command. To protect
+      # just test if the sub command starts with a -. If so just
+      # null it out because it is a flag an not sub command.
+      if ($subCmd -like "-*") {
+         $subCmd = $null
+      }
+
       if ($getHelp.IsPresent) {
          return dapr help $cmd $subCmd
       }
