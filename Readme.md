@@ -8,6 +8,12 @@ posh-dapr can complete instance names for the `stop` command. For example, you c
 
 posh-dapr can complete runtime versions. For example, you can type `dapr init --runtime-version` and pressing the <kbd>tab</kbd> to cycle through all the release of the dapr runtime.
 
+## install
+
+```powershell
+Install-Module -Name posh-dapr
+```
+
 Based on work by
 
 - Keith Dahlby, <http://solutionizing.net/>
