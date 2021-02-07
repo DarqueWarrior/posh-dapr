@@ -13,6 +13,7 @@ process {
       }
    }
 
+   Write-host "# $(dapr --version | Select-Object -Skip 0 -First 1)"
    $output > "dapr_help.txt"
    Write-Host "Mock _callDapr { Get-Content ""`$sampleFiles\dapr_help.txt"" } -ParameterFilter { `$cmd -eq 'help' }"
 
