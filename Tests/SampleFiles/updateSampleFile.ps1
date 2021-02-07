@@ -14,6 +14,12 @@ process {
    }
 
    Write-host "# $(dapr --version | Select-Object -Skip 0 -First 1)"
+
+   # I found a bug where calling dapr vs dapr help return different data. So
+   # create a sample file of dapr as well.
+   dapr > "dapr.txt"
+   Write-Host "Mock _callDapr { Get-Content ""`$sampleFiles\dapr.txt"" } -ParameterFilter { `$cmd -eq 'dapr' }"
+
    $output > "dapr_help.txt"
    Write-Host "Mock _callDapr { Get-Content ""`$sampleFiles\dapr_help.txt"" } -ParameterFilter { `$cmd -eq 'help' }"
 

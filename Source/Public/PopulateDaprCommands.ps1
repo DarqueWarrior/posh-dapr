@@ -26,6 +26,12 @@ function DaprTabExpansion {
    process {
       switch -regex ($lastBlock) {
 
+         # handles dapr -
+         'dapr(\.exe)* (-{1,2})(?<filter>\S*)$' {
+            findDaprFlags -currentLine $matches[0] -cmd 'dapr' -filter $matches['filter']
+            break
+         }
+
          # handles dapr <cmd> -<option> value -<option> ...
          'dapr(\.exe)* (?<cmd>\S+) ((?<subCmd>\S+) |((-{1,2})(\S+) \S+ ))*(-{1,2})(?<filter>\S*)$' {
             findDaprFlags -currentLine $matches[0] -cmd $matches['cmd'] -subCmd $matches['subCmd'] -filter $matches['filter']
