@@ -40,6 +40,12 @@ function DaprTabExpansion {
             break
          }
 
+         # handles dapr init --runtime-version <dapr release>
+         'dapr(\.exe)* init (--runtime-version )*(?<filter>\S*)$' {
+            findDaprReleases -filter $matches['filter']
+            break;
+         }
+
          # handles dapr <cmd>
          # handles dapr cmd <subCommnad>
          # handles dapr help <cmd>
@@ -63,6 +69,32 @@ function DaprTabExpansion {
    }
 }
 
+function findDaprReleases {
+   param(
+      [string] $filter
+   )
+
+   process {
+      $filter = $filter.Trim()
+      $output = Invoke-RestMethod -Uri 'https://api.github.com/repos/dapr/dapr/releases'
+      $daprReleases = foreach ($i in $output.tag_name) {
+         # The release starts with a v but we don't want that.
+         if ($i -match 'v(?<release>.+)') {
+            $release = $matches['release']
+
+            if ($filter -and $release.StartsWith($filter, 'CurrentCultureIgnoreCase')) {
+               $release
+            }
+            elseif (-not $filter) {
+               $release
+            }
+         }
+      }
+
+      $daprReleases
+   }
+}
+
 function findDaprInstances {
    param(
       [string] $filter
@@ -79,7 +111,7 @@ function findDaprInstances {
          if ($i -match '(?<instance>[^ ]+) +[0-9]') {
             $instance = $matches['instance']
 
-            if($instance -eq "0"){
+            if ($instance -eq "0") {
                continue
             }
 
