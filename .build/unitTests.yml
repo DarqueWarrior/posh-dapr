@@ -28,6 +28,7 @@ steps:
       pwsh: true
       targetType: 'inline'
       script: |
+        Get-Content .\dist\posh-dapr.psd1
         Import-Module .\dist\*.psd1
         # This loads [PesterConfiguration] into scope
         Import-Module Pester
@@ -49,6 +50,7 @@ steps:
       pwsh: true
       targetType: 'inline'
       script: |
+        Get-Content .\dist\posh-dapr.psd1
         Import-Module .\dist\*.psd1
         # This loads [PesterConfiguration] into scope
         Import-Module Pester
@@ -70,6 +72,7 @@ steps:
       targetType: 'inline'
       pwsh: true
       script: |
+        Get-Content .\dist\posh-dapr.psd1
         Import-Module .\dist\*.psd1
         # This loads [PesterConfiguration] into scope
         Import-Module Pester
