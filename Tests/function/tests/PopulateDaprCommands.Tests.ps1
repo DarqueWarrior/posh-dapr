@@ -15,6 +15,7 @@ Describe "DaprTabExpansion" {
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_logs.txt" } -ParameterFilter { $cmd -eq 'logs' -and $getHelp -eq $true }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_stop.txt" } -ParameterFilter { $cmd -eq 'stop' -and $getHelp -eq $true }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_help.txt" } -ParameterFilter { $cmd -eq 'help' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_upgrade.txt" } -ParameterFilter { $cmd -eq 'upgrade' -and $getHelp -eq $true }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_uninstall.txt" } -ParameterFilter { $cmd -eq 'uninstall' -and $getHelp -eq $true }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_completion.txt" } -ParameterFilter { $cmd -eq 'completion' -and $getHelp -eq $true }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_mtls_export.txt" } -ParameterFilter { $cmd -eq 'mtls' -and $subCmd -eq 'export' -and $getHelp -eq $true }
@@ -46,7 +47,7 @@ Describe "DaprTabExpansion" {
 
    Context "dapr run -" {
       It 'Should expand options' {
-         $expected = @('--app-id', '--app-max-concurrency', '--app-port', '--app-protocol', '--app-ssl', '--components-path', '--config', '--dapr-grpc-port', '--dapr-http-port', '--enable-profiling', '--help', '--log-level', '--placement-host-address', '--profile-port')
+         $expected = @('--app-id', '--app-max-concurrency', '--app-port', '--app-protocol', '--app-ssl', '--components-path', '--config', '--dapr-grpc-port', '--dapr-http-port', '--enable-profiling', '--help', '--log-level', '--metrics-port', '--placement-host-address', '--profile-port')
          $actual = DaprTabExpansion("dapr run -")
 
          $actual | Should -Be $expected
@@ -143,7 +144,7 @@ Describe "DaprTabExpansion" {
    # Test for run multiple flags can be expanded
    Context "dapr run --app-id test -" {
       It 'Should expand next flag' {
-         $expected = @('--app-max-concurrency', '--app-port', '--app-protocol', '--app-ssl', '--components-path', '--config', '--dapr-grpc-port', '--dapr-http-port', '--enable-profiling', '--help', '--log-level', '--placement-host-address', '--profile-port')
+         $expected = @('--app-max-concurrency', '--app-port', '--app-protocol', '--app-ssl', '--components-path', '--config', '--dapr-grpc-port', '--dapr-http-port', '--enable-profiling', '--help', '--log-level', '--metrics-port', '--placement-host-address', '--profile-port')
          $actual = DaprTabExpansion("dapr run --app-id test -")
 
          $actual | Should -Be $expected
@@ -153,7 +154,7 @@ Describe "DaprTabExpansion" {
    # Test for run multiple flags can be expanded
    Context "dapr run --app-id test --app-max-concurrency 10 -" {
       It 'Should expand next flag' {
-         $expected = @('--app-port', '--app-protocol', '--app-ssl', '--components-path', '--config', '--dapr-grpc-port', '--dapr-http-port', '--enable-profiling', '--help', '--log-level', '--placement-host-address', '--profile-port')
+         $expected = @('--app-port', '--app-protocol', '--app-ssl', '--components-path', '--config', '--dapr-grpc-port', '--dapr-http-port', '--enable-profiling', '--help', '--log-level', '--metrics-port', '--placement-host-address', '--profile-port')
          $actual = DaprTabExpansion("dapr run --app-id test --app-max-concurrency 10 -")
 
          $actual | Should -Be $expected
