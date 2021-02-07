@@ -105,10 +105,35 @@ Describe "DaprTabExpansion" {
       }
    }
 
+   Context "dapr init -k --runtime-version <release>" {
+      It 'Should expand releases' {
+         $actual = DaprTabExpansion("dapr init -k --runtime-version ")
+
+         $actual.count | Should -Be 4
+      }
+   }
+
+   Context "dapr upgrade --runtime-version <release>" {
+      It 'Should expand releases' {
+         $actual = DaprTabExpansion("dapr upgrade --runtime-version ")
+
+         $actual.count | Should -Be 4
+      }
+   }
+
+   Context "dapr upgrade --set key=value --s" {
+      It 'Should expand releases' {
+         $expected = @('--set')
+         $actual = DaprTabExpansion("dapr upgrade --set key=value --s")
+
+         $actual | Should -Be $expected
+      }
+   }
+
    # Test for run multiple flags can be expanded
    Context "dapr run --app-id test -" {
       It 'Should expand next flag' {
-         $expected = $expected = @('--app-max-concurrency', '--app-port', '--app-protocol', '--app-ssl', '--components-path', '--config', '--dapr-grpc-port', '--dapr-http-port', '--enable-profiling', '--help', '--log-level', '--placement-host-address', '--profile-port')
+         $expected = @('--app-max-concurrency', '--app-port', '--app-protocol', '--app-ssl', '--components-path', '--config', '--dapr-grpc-port', '--dapr-http-port', '--enable-profiling', '--help', '--log-level', '--placement-host-address', '--profile-port')
          $actual = DaprTabExpansion("dapr run --app-id test -")
 
          $actual | Should -Be $expected
@@ -118,7 +143,7 @@ Describe "DaprTabExpansion" {
    # Test for run multiple flags can be expanded
    Context "dapr run --app-id test --app-max-concurrency 10 -" {
       It 'Should expand next flag' {
-         $expected = $expected = @('--app-port', '--app-protocol', '--app-ssl', '--components-path', '--config', '--dapr-grpc-port', '--dapr-http-port', '--enable-profiling', '--help', '--log-level', '--placement-host-address', '--profile-port')
+         $expected = @('--app-port', '--app-protocol', '--app-ssl', '--components-path', '--config', '--dapr-grpc-port', '--dapr-http-port', '--enable-profiling', '--help', '--log-level', '--placement-host-address', '--profile-port')
          $actual = DaprTabExpansion("dapr run --app-id test --app-max-concurrency 10 -")
 
          $actual | Should -Be $expected
@@ -128,7 +153,7 @@ Describe "DaprTabExpansion" {
    # Test for sub commands
    Context "dapr completion " {
       It 'Should expand sub commands' {
-         $expected = $expected = @('bash', 'powershell', 'zsh')
+         $expected = @('bash', 'powershell', 'zsh')
          $actual = DaprTabExpansion("dapr completion ")
 
          $actual | Should -Be $expected
@@ -147,7 +172,7 @@ Describe "DaprTabExpansion" {
    # Test for help of sub commands
    Context "dapr help mtls " {
       It 'Should expand commands' {
-         $expected = $expected = @('expiry', 'export')
+         $expected = @('expiry', 'export')
          $actual = DaprTabExpansion("dapr help mtls ")
 
          $actual | Should -Be $expected

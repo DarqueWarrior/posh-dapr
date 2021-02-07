@@ -41,7 +41,7 @@ function DaprTabExpansion {
          }
 
          # handles dapr init --runtime-version <dapr release>
-         'dapr(\.exe)* init (--runtime-version )*(?<filter>\S*)$' {
+         'dapr(\.exe)* (init|upgrade) .+ (--runtime-version )*(?<filter>\S*)$' {
             findDaprReleases -filter $matches['filter']
             break;
          }
@@ -215,7 +215,9 @@ function findDaprFlags {
             $flag = $matches['flag']
 
             # Skip if it is already on the current line
-            if ($null -ne $(Select-String -InputObject $currentLine -Pattern $flag)) {
+            # Except if is --set which can be used more than once
+            if ($flag -ne 'set' -and
+               $null -ne $(Select-String -InputObject $currentLine -Pattern $flag)) {
                continue
             }
 
