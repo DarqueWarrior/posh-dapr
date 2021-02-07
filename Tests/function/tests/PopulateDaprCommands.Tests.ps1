@@ -3,7 +3,7 @@ Set-StrictMode -Version Latest
 Describe "DaprTabExpansion" {
    BeforeAll {
       $baseFolder = "$PSScriptRoot/../../.."
-$sampleFiles = "$PSScriptRoot/../../SampleFiles"
+      $sampleFiles = "$PSScriptRoot/../../SampleFiles"
       $sut = (Split-Path -Leaf $PSCommandPath).Replace(".Tests.", ".")
       . "$baseFolder/Source/Private/commons.ps1"
       . "$baseFolder/Source/Public/$sut"
@@ -17,6 +17,10 @@ $sampleFiles = "$PSScriptRoot/../../SampleFiles"
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_help.txt" } -ParameterFilter { $cmd -eq 'help' -and $getHelp -eq $true }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_completion.txt" } -ParameterFilter { $cmd -eq 'completion' -and $getHelp -eq $true }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_mtls_export.txt" } -ParameterFilter { $cmd -eq 'mtls' -and $subCmd -eq 'export' -and $getHelp -eq $true }
+
+      Mock Invoke-RestMethod {
+         $(Get-Content "$sampleFiles\dapr_init__runtime_version.json" -Raw | ConvertFrom-Json).value
+      } -ParameterFilter { $Uri -eq 'https://api.github.com/repos/dapr/dapr/releases' }
 
       $expectedCmds = @('completion', 'components', 'configurations', 'dashboard', 'help', 'init', 'invoke', 'list', 'logs', 'mtls', 'publish', 'run', 'status', 'stop', 'uninstall')
    }
@@ -90,6 +94,14 @@ $sampleFiles = "$PSScriptRoot/../../SampleFiles"
          $actual = DaprTabExpansion("dapr stop --app-id ")
 
          $actual | Should -Be 'testing'
+      }
+   }
+
+   Context "dapr init --runtime-version <release>" {
+      It 'Should expand releases' {
+         $actual = DaprTabExpansion("dapr init --runtime-version ")
+
+         $actual.count | Should -Be 4
       }
    }
 

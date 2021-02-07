@@ -12,7 +12,7 @@
    RootModule           = 'posh-dapr.psm1'
 
    # Version number of this module.
-   ModuleVersion        = '0.1.2'
+   ModuleVersion        = '1.0.0-rc.3'
 
    # Supported PSEditions
    CompatiblePSEditions = @('Core', 'Desktop')
