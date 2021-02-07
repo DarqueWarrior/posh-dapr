@@ -33,7 +33,7 @@ steps:
         Import-Module Pester
         $pesterArgs = [PesterConfiguration]::Default
         $pesterArgs.Run.Exit = $true
-        $pesterArgs.Run.Path = './Tests/function'
+        $pesterArgs.Run.Path = './Tests'
         $pesterArgs.Run.PassThru = $false
         $pesterArgs.Output.Verbosity = "Normal"
         $pesterArgs.TestResult.Enabled = $true
@@ -54,7 +54,7 @@ steps:
         Import-Module Pester
         $pesterArgs = [PesterConfiguration]::Default
         $pesterArgs.Run.Exit = $true
-        $pesterArgs.Run.Path = './Tests/function'
+        $pesterArgs.Run.Path = './Tests'
         $pesterArgs.Run.PassThru = $false
         $pesterArgs.Output.Verbosity = "Normal"
         $pesterArgs.TestResult.Enabled = $true
@@ -75,7 +75,7 @@ steps:
         Import-Module Pester
         $pesterArgs = [PesterConfiguration]::Default
         $pesterArgs.Run.Exit = $true
-        $pesterArgs.Run.Path = './Tests/function'
+        $pesterArgs.Run.Path = './Tests'
         $pesterArgs.Run.PassThru = $false
         $pesterArgs.Output.Verbosity = "Normal"
         $pesterArgs.TestResult.Enabled = $true
