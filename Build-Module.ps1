@@ -132,10 +132,6 @@ if (Test-Path ./Source/_functions.json) {
    Merge-File -inputFile ./Source/_functions.json -outputDir $output
 }
 
-# Copy nested modules
-Copy-Item -Path .\Source\DaprCompletionUtility -Destination $outputDir -Recurse -Force
-Copy-Item -Path .\Source\NativeCommandCompletion -Destination $outputDir -Recurse -Force
-
 # Build the help
 if ($buildHelp.IsPresent) {
    Write-Output 'Processing: External help file'
@@ -159,17 +155,11 @@ Write-Output 'Publishing: Additional files'
 Copy-Item -Path ./Source/install.ps1 -Destination "$output/install.ps1" -Force
 Copy-Item -Path ./Source/profile.example.ps1 -Destination "$output/profile.example.ps1" -Force
 
-if (Test-Path -Path "./Source/Public") {
-   Write-Output '  Updating: Functions To Export'
-   $newValue = ((Get-ChildItem -Path "./Source/Public" -Filter '*.ps1').BaseName |
-      ForEach-Object -Process { Write-Output "'$_'" }) -join ','
-}
+Write-Output '  Updating: Functions To Export'
+$newValue = ((Get-ChildItem -Path "./Source/Public" -Filter '*.ps1').BaseName |
+   ForEach-Object -Process { Write-Output "'$_'" }) -join ','
 
-if ($newValue) {
-   (Get-Content "./Source/posh-dapr.psd1") -Replace ("FunctionsToExport.+", "FunctionsToExport = ($newValue)") | Set-Content "$output/posh-dapr.psd1"
-} else {
-   Copy-Item -Path "./Source/posh-dapr.psd1" -Destination "$output/posh-dapr.psd1"
-}
+(Get-Content "./Source/posh-dapr.psd1") -Replace ("FunctionsToExport.+", "FunctionsToExport = ($newValue)") | Set-Content "$output/posh-dapr.psd1"
 
 Write-Output "Publishing: Complete to $output"
 # run the unit tests with Pester
@@ -192,7 +182,7 @@ if ($runTests.IsPresent) {
    Import-Pester
 
    $pesterArgs = [PesterConfiguration]::Default
-   $pesterArgs.Run.Path = './Tests'
+   $pesterArgs.Run.Path = './Tests/function'
    $pesterArgs.TestResult.Enabled = $true
    $pesterArgs.TestResult.OutputPath = './Tests/TestResults/test-results.xml'
 

@@ -1,0 +1,3 @@
+  APP ID                HTTP PORT  GRPC PORT  APP PORT  COMMAND  AGE  CREATED              PID
+  testing               11344      11345      0                  13m  2020-12-23 15:09.01  66232
+  Chatternebula-Ringer  11608      11609      0                  31s  2020-12-23 15:22.09  72084

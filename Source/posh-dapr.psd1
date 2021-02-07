@@ -12,7 +12,7 @@
    RootModule           = 'posh-dapr.psm1'
 
    # Version number of this module.
-   ModuleVersion        = '0.2.0'
+   ModuleVersion        = '0.1.2'
 
    # Supported PSEditions
    CompatiblePSEditions = @('Core', 'Desktop')
@@ -33,7 +33,7 @@
    Description          = 'Provides tab completion that goes beyond that supported by the `dapr completion` command that comes with Dapr.'
 
    # Minimum version of the Windows PowerShell engine required by this module
-   PowerShellVersion    = '5.1'
+   PowerShellVersion = '5.1'
 
    # Name of the Windows PowerShell host required by this module
    # PowerShellHostName = ''
@@ -66,11 +66,11 @@
    # FormatsToProcess     = @()
 
    # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-   NestedModules        = @('NativeCommandCompletion', 'DaprCompletionUtility')
+   # NestedModules     = @()
 
    # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
    # This wildcard will be replaced during the build process in AzD
-   FunctionsToExport    = @('Select-CompletionResult', 'Invoke-CompletionCustomScript')
+   FunctionsToExport    = @('*')
 
    # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
    # CmdletsToExport = @()

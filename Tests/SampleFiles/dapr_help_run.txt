@@ -1,0 +1,34 @@
+Run Dapr and (optionally) your application side by side. Supported platforms: Self-hosted
+
+Usage:
+  dapr run [flags]
+
+Examples:
+
+# Run a .NET application:
+  dapr run --app-id myapp --app-port 5000 -- dotnet run
+# Run a Java application:
+  dapr run --app-id myapp -- java -jar myapp.jar
+# Run a NodeJs application that listens to port 3000:
+  dapr run --app-id myapp --app-port 3000 -- node myapp.js
+# Run a Python application:
+  dapr run --app-id myapp -- python myapp.py
+# Run sidecar only:
+  dapr run --app-id myapp
+
+
+Flags:
+  -a, --app-id string                   The id for your application, used for service discovery
+      --app-max-concurrency int         The concurrency level of the application, otherwise is unlimited (default -1)
+  -p, --app-port int                    The port your application is listening on (default -1)
+  -P, --app-protocol string             The protocol (gRPC or HTTP) Dapr uses to talk to the application (default "http")
+      --app-ssl                         Enable https when Dapr invokes the application
+  -d, --components-path string          The path for components directory (default "C:\\Users\\dlbm3\\.dapr\\components")
+  -c, --config string                   Dapr configuration file (default "C:\\Users\\dlbm3\\.dapr\\config.yaml")
+  -G, --dapr-grpc-port int              The gRPC port for Dapr to listen on (default -1)
+  -H, --dapr-http-port int              The HTTP port for Dapr to listen on (default -1)
+      --enable-profiling                Enable pprof profiling via an HTTP endpoint
+  -h, --help                            Print this help message
+      --log-level string                The log verbosity. Valid values are: debug, info, warn, error, fatal, or panic (default "info")
+      --placement-host-address string   The host on which the placement service resides (default "localhost")
+      --profile-port int                The port for the profile server to listen on (default -1)
