@@ -32,10 +32,16 @@ function TabExpansion {
       $lastBlock = [regex]::Split($line, '[|;]')[-1]
 
       switch -regex ($lastBlock) {
-         "^$(Get-DaprAliasPattern dapr) (.*)" { DaprTabExpansion $lastBlock }
+         "^$(Get-DaprAliasPattern dapr) (.*)" {
+            DaprTabExpansion $lastBlock
+         }
 
          # Fall back on existing tab expansion
-         default { if (Test-Path Function:\TabExpansionBackup) { TabExpansionBackup $line $lastWord } }
+         default {
+            if (Test-Path Function:\TabExpansionBackup) {
+               TabExpansionBackup $line $lastWord
+            }
+         }
       }
    }
 }

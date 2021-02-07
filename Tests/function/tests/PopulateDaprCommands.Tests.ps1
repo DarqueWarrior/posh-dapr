@@ -1,6 +1,6 @@
 Set-StrictMode -Version Latest
 
-Describe "DaprTabExpansion" {
+Describe "PopulateDaprCommands" {
    BeforeAll {
       $baseFolder = "$PSScriptRoot/../../.."
       $sampleFiles = "$PSScriptRoot/../../SampleFiles"
@@ -10,6 +10,7 @@ Describe "DaprTabExpansion" {
 
       # Mock all calls to help because your CI system may not have dapr installed or the correct version.
       # CLI version: 1.0.0-rc.4
+      Mock _callDapr { Get-Content "$sampleFiles\dapr.txt" } -ParameterFilter { $cmd -eq 'dapr' }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help.txt" } -ParameterFilter { $cmd -eq 'help' }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_completion.txt" } -ParameterFilter { $cmd -eq 'completion' -and $getHelp -eq $true }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_completion_bash.txt" } -ParameterFilter { $cmd -eq 'completion' -and $subCmd -eq 'bash' -and $getHelp -eq $true }
@@ -48,6 +49,42 @@ Describe "DaprTabExpansion" {
          $actual = DaprTabExpansion("dapr ")
 
          $actual | Should -Be $expectedCmds
+      }
+   }
+
+   Context "dapr -" {
+      It 'Should expand flags' {
+         $expected = ('--help', '--version')
+         $actual = DaprTabExpansion("dapr -")
+
+         $actual | Should -Be $expected
+      }
+   }
+
+   Context "dapr --" {
+      It 'Should expand flags' {
+         $expected = ('--help', '--version')
+         $actual = DaprTabExpansion("dapr --")
+
+         $actual | Should -Be $expected
+      }
+   }
+
+   Context "dapr -v" {
+      It 'Should expand flags' {
+         $expected = ('--version')
+         $actual = DaprTabExpansion("dapr -v")
+
+         $actual | Should -Be $expected
+      }
+   }
+
+   Context "dapr --v" {
+      It 'Should expand flags' {
+         $expected = ('--version')
+         $actual = DaprTabExpansion("dapr -v")
+
+         $actual | Should -Be $expected
       }
    }
 
