@@ -217,7 +217,10 @@ function findDaprFlags {
             # Skip if it is already on the current line
             # Except if is --set which can be used more than once
             if ($flag -ne 'set' -and
-               $null -ne $(Select-String -InputObject $currentLine -Pattern $flag)) {
+               # When testing the flag start it with an - or flags like all will
+               # be skipped on commands where all appears in the command i.e.
+               # uninstall contains all.
+               $null -ne $(Select-String -InputObject $currentLine -Pattern "-$flag")) {
                continue
             }
 

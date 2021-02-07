@@ -15,6 +15,7 @@ Describe "DaprTabExpansion" {
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_logs.txt" } -ParameterFilter { $cmd -eq 'logs' -and $getHelp -eq $true }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_stop.txt" } -ParameterFilter { $cmd -eq 'stop' -and $getHelp -eq $true }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_help.txt" } -ParameterFilter { $cmd -eq 'help' -and $getHelp -eq $true }
+      Mock _callDapr { Get-Content "$sampleFiles\dapr_help_uninstall.txt" } -ParameterFilter { $cmd -eq 'uninstall' -and $getHelp -eq $true }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_completion.txt" } -ParameterFilter { $cmd -eq 'completion' -and $getHelp -eq $true }
       Mock _callDapr { Get-Content "$sampleFiles\dapr_help_mtls_export.txt" } -ParameterFilter { $cmd -eq 'mtls' -and $subCmd -eq 'export' -and $getHelp -eq $true }
 
@@ -98,7 +99,7 @@ Describe "DaprTabExpansion" {
    }
 
    Context "dapr init --runtime-version <release>" {
-      It 'Should expand releases' {
+      It 'Should expand runtime versions' {
          $actual = DaprTabExpansion("dapr init --runtime-version ")
 
          $actual.count | Should -Be 4
@@ -106,7 +107,7 @@ Describe "DaprTabExpansion" {
    }
 
    Context "dapr init -k --runtime-version <release>" {
-      It 'Should expand releases' {
+      It 'Should expand runtime versions' {
          $actual = DaprTabExpansion("dapr init -k --runtime-version ")
 
          $actual.count | Should -Be 4
@@ -114,7 +115,7 @@ Describe "DaprTabExpansion" {
    }
 
    Context "dapr upgrade --runtime-version <release>" {
-      It 'Should expand releases' {
+      It 'Should expand runtime versions' {
          $actual = DaprTabExpansion("dapr upgrade --runtime-version ")
 
          $actual.count | Should -Be 4
@@ -122,9 +123,18 @@ Describe "DaprTabExpansion" {
    }
 
    Context "dapr upgrade --set key=value --s" {
-      It 'Should expand releases' {
+      It 'Should allow mupliple sets' {
          $expected = @('--set')
          $actual = DaprTabExpansion("dapr upgrade --set key=value --s")
+
+         $actual | Should -Be $expected
+      }
+   }
+
+   Context "dapr uninstall -" {
+      It 'Should expand next flag' {
+         $expected = @('--all', '--help', '--kubernetes', '--namespace', '--network')
+         $actual = DaprTabExpansion("dapr uninstall -")
 
          $actual | Should -Be $expected
       }
