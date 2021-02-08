@@ -151,6 +151,15 @@ Describe "PopulateDaprCommands" {
       }
    }
 
+   Context "dapr init -" {
+      It 'Should expand all flags' {
+         $expected = @('--dashboard-version', '--enable-ha', '--enable-mtls', '--help', '--kubernetes', '--namespace', '--network', '--runtime-version', '--set', '--slim')
+         $actual = DaprTabExpansion("dapr init -")
+
+         $actual | Should -Be $expected
+      }
+   }
+
    Context "dapr init --runtime-version <release>" {
       It 'Should expand runtime versions' {
          $actual = DaprTabExpansion("dapr init --runtime-version ")
